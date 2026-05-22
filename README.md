@@ -4,7 +4,7 @@ A [Paperclips](https://www.decisionproblem.com/paperclips/)-inspired idle game a
 
 ## 🎮 Play it
 
-👉 **[Play online](https://YOUR_USERNAME.github.io/telecom-tycoon/)** *(link live after a minute)*
+👉 **[Play online](https://ankur-dabba.github.io/telecom-tycoon/)** *(link live after a minute)*
 
 Or download `game/index.html` and open it in any browser — no install needed.
 
