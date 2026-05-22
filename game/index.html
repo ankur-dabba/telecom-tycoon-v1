@@ -1,0 +1,1534 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Telecom Tycoon</title>
+<style>
+  body { font-family: Georgia, "Times New Roman", serif; background:#fff; color:#000;
+         max-width: 1200px; margin: 16px auto; padding: 0 14px; font-size: 15px; line-height: 1.45; }
+  .banner { background:#000; color:#fff; font-family: "Courier New", monospace; padding:6px 10px; font-size:13px; }
+  .notice { font-style: italic; color:#444; min-height:18px; margin: 4px 0; font-size: 13px; }
+  h1 { font-size: 22px; margin: 14px 0 2px 0; font-weight: 700; }
+  h2 { font-size: 16px; margin: 14px 0 4px 0; font-weight: 700; border-bottom: 1px solid #999; padding-bottom: 3px; }
+  h3 { font-size: 14px; margin: 8px 0 2px 0; font-weight: 700; }
+  button { font-family: inherit; font-size: 13px; padding: 1px 7px; margin: 1px 2px 1px 0; cursor: pointer; }
+  button:disabled { cursor: not-allowed; color:#888; }
+  .row { margin: 2px 0; }
+  .lco, .bw-team, .offer, .partner-card { border:1px solid #bbb; padding:6px 8px; margin:6px 0; background:#fafafa; }
+  .lco h3, .bw-team h3, .offer h3, .partner-card h3 { margin-top: 0; }
+  .small { font-size: 12px; color:#555; }
+  .mini { font-size: 11px; color:#777; }
+  .num { font-weight: 600; }
+  .market-listing { border:1px dashed #aaa; padding:4px 6px; margin: 3px 0; }
+  .hidden { display:none; }
+  .clock { float:right; font-family: "Courier New", monospace; font-size: 12px; color:#444; margin-top: 6px; }
+  .tt-bar { background:#eee; padding:6px 10px; margin: 6px 0 12px 0; border:1px solid #ccc; }
+  .warn { color:#a00; font-weight: 600; }
+  .gain { color:#063; }
+  hr { border:0; border-top: 1px solid #ccc; margin: 10px 0; }
+  .two-col { display: flex; gap: 18px; flex-wrap: wrap; align-items: flex-start; margin-top: 10px; }
+  .left-col, .right-col { flex: 1 1 380px; min-width: 360px; }
+  .right-col { background:#fcfcf4; padding: 0 12px 8px 12px; border-left: 1px solid #ddd; }
+  .right-col h2:first-of-type { margin-top: 6px; }
+  .col-label { font-family: "Courier New", monospace; font-size: 11px; color:#888; text-transform: uppercase; letter-spacing: 1px; margin-top: 6px; }
+  .upgrade-list { margin: 4px 0; }
+  .upgrade-list button { display:block; margin: 2px 0; text-align: left; min-width: 280px; }
+  .stat-line { color:#333; }
+  .top-stats { background:#f8f8f8; padding: 6px 10px; border:1px solid #eee; margin: 6px 0; }
+  .top-stats .stat { display:inline-block; margin-right: 18px; }
+  .top-auto { background:#f4f4ee; padding: 8px 10px; border:1px solid #ddd; margin: 6px 0; }
+  .top-auto button { font-size: 14px; padding: 3px 10px; }
+  /* Welcome overlay */
+  #welcome { position: fixed; inset: 0; background:#fff; display:flex; align-items:center; justify-content:center; z-index: 100; }
+  #welcome-inner { max-width: 460px; padding: 0 20px; }
+  #welcome h1 { font-size: 28px; margin: 0 0 12px 0; }
+  #welcome p { color:#333; margin: 4px 0; }
+  #company-input { font-family: Georgia, serif; font-size: 18px; padding: 6px 10px; width: 100%; box-sizing: border-box; border: 1px solid #999; margin: 14px 0 10px 0; }
+  #start-btn { font-size: 16px; padding: 6px 16px; }
+</style>
+</head>
+<body>
+
+<div id="welcome">
+  <div id="welcome-inner">
+    <h1>Telecom Tycoon</h1>
+    <p>You're starting a telecom company from nothing.</p>
+    <p>Generate data, buy routers, partner with cable operators, hire bandwidth suppliers.</p>
+    <p class="small" style="margin-top:14px;">Name your company:</p>
+    <input id="company-input" type="text" maxlength="32" placeholder="e.g. SkyWire Networks" autocomplete="off">
+    <div><button id="start-btn" type="button">Get Started</button></div>
+  </div>
+</div>
+
+<div id="game-ui" class="hidden">
+
+<div class="banner" id="banner-text">&gt; Welcome to Telecom Tycoon</div>
+<div id="hint" class="small" style="color:#0a5; font-style:italic; margin: 4px 0;"></div>
+<div id="notice" class="notice"></div>
+<div class="clock" id="clock">Day 1, 00:00</div>
+
+<div id="tt-bar" class="tt-bar hidden">
+  <strong>Telecom Tokens:</strong> <span id="tt-display">0</span> unspent
+  <span id="tt-spent" class="small"></span>
+</div>
+
+<h1>Customers: <span id="customers" class="num">0</span></h1>
+<div class="row">
+  <button id="btn-generate">Generate Data</button>
+  <span class="small">+1 GB / click. Cost <span id="click-cost-display">$0.01000</span>/GB <span id="cheap-supplier-label"></span> <span id="supplier-trend"></span></span>
+</div>
+
+<div class="top-stats">
+  <div class="stat">Funds: $<span id="funds" class="num">500.00</span> <span class="small" id="funds-rate"></span></div>
+  <div class="stat">Data Capacity: <span id="inventory" class="num">0.00</span> GB <span class="small" id="inv-rate"></span></div>
+  <div class="stat">Routers in stock: <span id="routers-stock" class="num">0</span></div>
+</div>
+
+<div class="top-auto">
+  <strong>Auto-bandwidth:</strong> <span id="auto-rate">none</span>
+  &nbsp; <button id="btn-top-upgrade">Upgrade auto-bandwidth</button>
+  <span class="small" id="auto-hint"></span>
+</div>
+
+<div class="two-col">
+
+<!-- LEFT COLUMN — MY NETWORK -->
+<div class="left-col">
+<div class="col-label">My Network</div>
+
+<div id="lcos-section" class="hidden">
+  <h2>My LCOs</h2>
+  <div id="lco-list"></div>
+</div>
+
+<div id="bw-section" class="hidden">
+  <h2>My Bandwidth Suppliers</h2>
+  <div id="bw-teams"></div>
+  <div class="small" id="bw-buy-row" style="margin-top:6px;">
+    <button id="btn-buy-bw">Buy bandwidth on spot</button>
+    10,000 GB &nbsp; Cost: $<span id="bw-buy-cost" class="num">95.00</span>
+  </div>
+</div>
+
+<div id="mfg-section" class="hidden">
+  <h2>Hardware Manufacturing</h2>
+  <div class="row">
+    <span class="stat-line">Production line — Level: <span id="mfg-level" class="num">1</span></span>
+    &nbsp;<span class="small">(1 router = 1 customer)</span>
+  </div>
+  <div class="row stat-line">
+    Manufacturer ready stock: <span id="mfg-stock" class="num">5</span> / <span id="mfg-max" class="num">15</span>
+    <span class="mini">· buy from this for instant claim</span>
+  </div>
+  <div class="row">
+    Pending orders: <span id="pending-orders" class="num">0</span>
+    &nbsp;<span class="small" id="pending-rate-line"></span>
+  </div>
+  <div class="row">
+    <strong>Order routers:</strong>
+    <button id="btn-order-1">Buy 1 ($5)</button>
+    <button id="btn-order-5">Buy 5 ($22 · 12% off)</button>
+    <button id="btn-order-25">Buy 25 ($90 · 28% off)</button>
+  </div>
+  <div class="row">
+    <button id="btn-upgrade-mfg">Upgrade production line</button>
+    Cost: $<span id="mfg-upgrade-cost" class="num">25</span>
+  </div>
+</div>
+
+</div><!-- /left-col -->
+
+<!-- RIGHT COLUMN — OPEN MARKETS -->
+<div class="right-col">
+<div class="col-label">Open Markets</div>
+
+<div id="lco-market-section" class="hidden">
+  <h2>LCO Partnership Market</h2>
+  <div class="small" style="margin-bottom:4px;">3 offers · one rotates per game-day · refresh all for $10</div>
+  <div id="lco-offers"></div>
+  <button id="btn-refresh-lco-offers">Refresh offers ($10)</button>
+</div>
+
+<div id="bw-market-section" class="hidden">
+  <h2>Bandwidth Partner Market</h2>
+  <div class="small" style="margin-bottom:4px;">2 partners · rotates daily · refresh for $10</div>
+  <div id="bw-offers"></div>
+  <button id="btn-refresh-bw-offers">Refresh partners ($10)</button>
+</div>
+
+<div id="open-marketplace-section" class="hidden">
+  <h2>Open Marketplace</h2>
+  <div class="small">Liquidate instantly (~50% spot) or buy discounted listings.</div>
+  <div class="row" style="margin-top:6px;">
+    <strong>Sell now:</strong>
+    <button id="sell-data">Sell 1,000 GB</button> <span class="small">(get $<span id="sell-data-offer" class="num">5</span>)</span>
+    &nbsp;
+    <button id="sell-hotspot">Sell 5 routers</button> <span class="small">(get $<span id="sell-hotspot-offer" class="num">12</span>)</span>
+  </div>
+  <div style="margin-top:8px;"><strong>Active listings:</strong></div>
+  <div id="market-listings"><div class="small">No listings right now.</div></div>
+  <div class="row small" style="margin-top:6px;">
+    <input type="checkbox" id="auto-sell-toggle"> Auto-sell excess data above
+    <input type="number" id="auto-sell-threshold" min="1000" step="1000" value="50000" style="width:80px;"> GB
+  </div>
+</div>
+
+</div><!-- /right-col -->
+
+</div><!-- /two-col -->
+
+<div id="prestige-panel" class="hidden">
+  <h2>Prestige</h2>
+  <div class="row">You've proven the model in one city.</div>
+  <div class="row">Lifetime customers: <span id="prestige-lifetime" class="num">0</span>. Tokens you would mint: <span id="prestige-tt" class="num">0</span></div>
+  <div class="row"><button id="btn-prestige">Prestige and restart</button></div>
+  <hr>
+  <div><strong>Spend Telecom Tokens (persists across runs):</strong></div>
+  <div id="tt-spend-menu"></div>
+</div>
+
+</div><!-- /game-ui -->
+
+<script>
+'use strict';
+
+// =================================================================
+// CONSTANTS — v7
+// =================================================================
+const TICKS_PER_DAY  = 240;
+const TICKS_PER_HOUR = 10;
+const TICK_MS        = 100;
+const BILLING_DAILY_RATIO = 1/30;
+
+const REGIONS = {
+  Rural:    { avg_gb: 5,  base_demand: 0.8, target_price_mo: 4.0,  elasticity: 1.5, acq_mult: 0.6, commission: 0.05 },
+  Suburban: { avg_gb: 8,  base_demand: 1.5, target_price_mo: 6.0,  elasticity: 1.2, acq_mult: 1.0, commission: 0.10 },
+  Urban:    { avg_gb: 12, base_demand: 2.0, target_price_mo: 9.0,  elasticity: 0.8, acq_mult: 1.5, commission: 0.15 },
+  Metro:    { avg_gb: 18, base_demand: 3.0, target_price_mo: 14.0, elasticity: 0.5, acq_mult: 2.0, commission: 0.25 },
+};
+
+const SPEED_TIERS = [
+  { tier:'100 Mbps', cap_mo:  7.50 }, { tier:'250 Mbps', cap_mo: 10.00 },
+  { tier:'1 Gbps',   cap_mo: 15.00 }, { tier:'2.5 Gbps', cap_mo: 20.00 },
+  { tier:'10 Gbps',  cap_mo: 25.00 }, { tier:'25 Gbps',  cap_mo: 30.00 },
+];
+
+const REGION_NAMES = {
+  Rural:    ['Pinegrove','Westville','Marshfield','Stonehaven','Brookline','Cedar Hollow','Oakridge','Ridgeway'],
+  Suburban: ['Greenwood','Northvale','Fairlake','Maple Heights','Brookwood','Elmcrest','Sunnybrook','Riverside'],
+  Urban:    ['Sector 7','Midtown','Old Quarter','Riverbend','Westend','Capitol Hill','Harbor District','East Ward'],
+  Metro:    ['Central Core','Diamond District','Skyline Plaza','Grand Junction','Empire Towers','Crown Square','Atlas Park','Pinnacle Bay'],
+};
+
+const LCO_SUFFIXES = ['Networks','Cable','Broadband','Internet','Communications','ISP','Telecom','Link'];
+const SUPPLIER_NAMES = ['AirNet Wholesale','FiberCore ISP','TeraLink Backbone','Skybridge Net','PacketWorks','OmniWave Carrier','BlueRay Telecom','NetPilot Networks'];
+
+const STARTER_TIERS = [
+  { name:'Tiny Rural',     region:'Rural',    cust:[3, 3],   subPriceMo:[3.5, 4.5], gbReq:200, cost:[20, 50] },
+  { name:'Small Suburban', region:'Suburban', cust:[8,10],   subPriceMo:[5.0, 6.5], gbReq:400, cost:[60, 140] },
+  { name:'Small Urban',    region:'Urban',    cust:[10,12],  subPriceMo:[8.0, 9.5], gbReq:500, cost:[120, 220] },
+];
+
+const OFFER_TIERS = [
+  { name:'Small Rural',    weight: 30, region:'Rural',    cust:[12,20],   subPriceMo:[3.5, 4.5], gbReq:800,  cost:[100, 200] },
+  { name:'Small Suburban', weight: 25, region:'Suburban', cust:[20,35],   subPriceMo:[5.5, 7.0], gbReq:1500, cost:[250, 450] },
+  { name:'Mid Urban',      weight: 20, region:'Urban',    cust:[25,50],   subPriceMo:[8.5, 11.0],gbReq:3000, cost:[700,1200] },
+  { name:'Large Urban',    weight: 10, region:'Urban',    cust:[60,100],  subPriceMo:[9.0, 12.0],gbReq:5000, cost:[1800,2800] },
+  { name:'Metro',          weight: 5,  region:'Metro',    cust:[100,200], subPriceMo:[13.0,17.0],gbReq:9000, cost:[3500, 6000] },
+];
+
+const BW_TIERS = [
+  { name:'Basic',     weight: 50, lvl:1, setupCost:[15, 35] },
+  { name:'Standard',  weight: 30, lvl:2, setupCost:[70, 120] },
+  { name:'Premium',   weight: 15, lvl:3, setupCost:[250, 400] },
+  { name:'Backbone',  weight: 5,  lvl:4, setupCost:[800, 1300] },
+];
+function rollOfferTier() {
+  const total = OFFER_TIERS.reduce((s,t)=>s+t.weight, 0);
+  let r = Math.random() * total;
+  for (const t of OFFER_TIERS) { r -= t.weight; if (r <= 0) return t; }
+  return OFFER_TIERS[0];
+}
+function rollBwTier() {
+  const total = BW_TIERS.reduce((s,t)=>s+t.weight, 0);
+  let r = Math.random() * total;
+  for (const t of BW_TIERS) { r -= t.weight; if (r <= 0) return t; }
+  return BW_TIERS[0];
+}
+
+// Formulas — autoclicker base reduced 100x (500 → 5)
+const bwGenAt   = L => 5 * Math.pow(2.5, L-1);                  // L1=5, L2=12.5, L3=31, L4=78, L5=195, L6=488
+const bwCostAt  = L => Math.round(5 * Math.pow(2.5, L-1));      // upgrade cost L→L+1
+const bwRateAt  = L => 0.0095 * Math.pow(0.9, L-1);
+const lcoUpgradeCost = L => Math.round(15 * Math.pow(2.8, L-1));
+const subTeamCost = lvl => Math.round(5 * Math.pow(2.2, lvl));
+const mfgTicksPerUnit = L => Math.max(20, Math.round(120 * Math.pow(0.6, L-1)));
+const mfgMaxStock = L => 15 + 5 * (L-1);
+const mfgCostAt = L => Math.round(15 * Math.pow(2.5, L-1));
+const HS_PRICE = 5;
+const HS_BULK5_PRICE = 22;
+const HS_BULK25_PRICE = 90;
+
+// =================================================================
+// STATE
+// =================================================================
+let state;
+
+function initState(carryOverTT, companyName) {
+  const tt = carryOverTT && carryOverTT.tt ? carryOverTT.tt : 0;
+  const ttSpent = carryOverTT && carryOverTT.ttSpent ? {...carryOverTT.ttSpent} : {
+    hardware:0, lco:0, bandwidth:0, reliability:0, capital:0
+  };
+  const carryName = carryOverTT && carryOverTT.companyName ? carryOverTT.companyName : (companyName || 'Telecom Tycoon');
+  const startFunds = 500 + 100 * (ttSpent.capital || 0);
+  state = {
+    tick: 0,
+    companyName: carryName,
+    funds: startFunds,
+    inventory: 0,
+    routersInStock: 0,
+    totalDeployedRouters: 0,
+    totalLifetimeCustomers: 0,
+    creditUsed: false,
+
+    lcos: [],
+    nextLcoId: 1,
+
+    suppliers: [],
+    nextSupplierId: 1,
+    _usedSupplierNames: new Set(),
+
+    manufacturer: {
+      level: 1, inStock: 5, progressTicks: 0, pendingOrders: 0,
+    },
+
+    market: { listings: [], nextListingId: 1, lastListingTick: 0, autoSell:false, autoSellThreshold:50000 },
+
+    lcoMarket: { offers: [], nextOfferId: 1, lastRefreshTick: 0 },
+    bwMarket:  { offers: [], nextOfferId: 1, lastRefreshTick: 0 },
+
+    unlocked: { mfg:false, lcoMarket:false, bwSuppliers:false,
+                bwMarket:false, openMarketplace:false,
+                bwSubteams:false, lcoSubteams:false,
+                outages:false, prestige:false },
+
+    tt, ttSpent,
+
+    inMilestones: { c10:false, c100:false, c500:false, c1000:false, c5000:false },
+    perRunMods: { lcoAcqMult:1.0, bwRateMult:1.0, hsRateMult:1.0 },
+
+    eventBuffer: { feastUntilTick:0, woomUntilTick:0 },
+    inventoryDriedToday: false,
+    lastEventTick: 0,
+    __noiseMult: 1.0,
+  };
+  // Clear DOM caches on init/prestige
+  cardCache.lcos.clear();
+  cardCache.suppliers.clear();
+  cardCache.lcoOffers.clear();
+  cardCache.bwOffers.clear();
+  cardCache.marketListings.clear();
+  const containers = ['lco-list','bw-teams','lco-offers','bw-offers','market-listings','tt-spend-menu'];
+  containers.forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = ''; });
+  document.getElementById('banner-text').textContent = '> Welcome to ' + state.companyName;
+}
+
+function makeLCOFromOffer(offer) {
+  const id = state.nextLcoId++;
+  const baseCap = Math.round(offer.customers * 4);
+  return {
+    id, name: offer.name, region: offer.region, level: 1,
+    subPriceMo: offer.subPriceMo, sentiment: 70,
+    customersI: offer.customers,
+    potentialCapF: baseCap,          // fractional, ticks live
+    deployedRouters: offer.customers,
+    outageUntilTick: 0,
+    subteams: { install:0, support:0, infra:0, app:0, ott:0, expansion:0 },
+  };
+}
+
+function offerFromTier(tier) {
+  const region = tier.region;
+  const names = REGION_NAMES[region];
+  const cityName = names[Math.floor(Math.random()*names.length)];
+  const suffix = LCO_SUFFIXES[Math.floor(Math.random()*LCO_SUFFIXES.length)];
+  const customers = Math.floor(rand(tier.cust[0], tier.cust[1]+1));
+  const subPriceMo = Math.round(rand(tier.subPriceMo[0], tier.subPriceMo[1]) * 2) / 2;
+  const cost = Math.round(rand(tier.cost[0], tier.cost[1]));
+  return { id: state.lcoMarket.nextOfferId++, name: cityName + ' ' + suffix, region, customers, subPriceMo,
+           hsReq: customers, gbReq: tier.gbReq, cost };
+}
+function makeOffer() { return offerFromTier(rollOfferTier()); }
+function makeStarterOffer(idx) { return offerFromTier(STARTER_TIERS[idx]); }
+function seedLcoMarket() {
+  state.lcoMarket.offers = [ makeStarterOffer(0), makeStarterOffer(1), makeStarterOffer(2) ];
+}
+
+function makeBwOffer() {
+  const tier = rollBwTier();
+  let nm = 'Supplier ' + state.nextSupplierId;
+  for (const n of SUPPLIER_NAMES) {
+    if (!state._usedSupplierNames.has(n) && !state.bwMarket.offers.some(o => o.name === n)) {
+      nm = n; break;
+    }
+  }
+  const setupCost = Math.round(rand(tier.setupCost[0], tier.setupCost[1]));
+  return { id: state.bwMarket.nextOfferId++, name: nm, lvl: tier.lvl, tierName: tier.name, setupCost,
+           rate: bwRateAt(tier.lvl), speedTier: SPEED_TIERS[Math.min(tier.lvl-1, SPEED_TIERS.length-1)],
+           gen: bwGenAt(tier.lvl) };
+}
+function seedBwMarket() {
+  state.bwMarket.offers = [ makeBwOffer(), makeBwOffer() ];
+}
+
+// =================================================================
+// HELPERS
+// =================================================================
+function fmt(n, d=2) {
+  if (n === Infinity || n === -Infinity || isNaN(n)) return '—';
+  return n.toLocaleString('en-US', { minimumFractionDigits:d, maximumFractionDigits:d });
+}
+function fmtI(n) { return Math.floor(n).toLocaleString('en-US'); }
+function rand(min, max) { return min + Math.random()*(max-min); }
+function randn() { let u=Math.random(); return Math.sqrt(-2*Math.log(u||1e-9))*Math.cos(2*Math.PI*Math.random()); }
+function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+function pick(arr) { return arr[Math.floor(Math.random()*arr.length)]; }
+
+const hud = {
+  noticeTimeout: null,
+  notice(msg) {
+    const el = document.getElementById('notice');
+    el.textContent = msg ? '> ' + msg : '';
+    if (this.noticeTimeout) clearTimeout(this.noticeTimeout);
+    if (msg) this.noticeTimeout = setTimeout(() => { el.textContent = ''; }, 5000);
+  }
+};
+function notice(m) { hud.notice(m); }
+
+// =================================================================
+// ECONOMICS
+// =================================================================
+function totalCustomersI() { let n=0; for (const l of state.lcos) n += l.customersI; return n; }
+
+function cheapestSupplier() {
+  let best = null, bestRate = Infinity;
+  for (const s of state.suppliers) {
+    if (s.failedUntilTick > state.tick) continue;
+    const r = bwRateAt(s.level) * (1 - 0.02 * s.subteams.procurement);
+    if (r < bestRate) { bestRate = r; best = s; }
+  }
+  return best;
+}
+function primarySupplier() { return state.suppliers[0] || null; }
+
+function clickCost() {
+  const C = totalCustomersI();
+  const C_curve = Math.max(0.40, 1 - Math.log(1 + C/200)/5);
+  const supp = cheapestSupplier();
+  const rate = supp ? bwRateAt(supp.level) * (1 - 0.02 * supp.subteams.procurement) : 0.01;
+  return rate * (C_curve / 0.95) * (state.__noiseMult || 1.0);
+}
+
+function regionDemand(lco) {
+  const r = REGIONS[lco.region];
+  const sentFactor = 0.5 + 0.5 * (lco.sentiment/100);
+  const effectivePrice = lcoEffectiveMonthlyPrice(lco);
+  return r.base_demand * Math.pow(r.target_price_mo / effectivePrice, r.elasticity) * sentFactor;
+}
+
+function speedTier() {
+  if (state.suppliers.length === 0) return null;
+  let maxIdx = 0;
+  for (const s of state.suppliers) if (s.level-1 > maxIdx) maxIdx = s.level-1;
+  return SPEED_TIERS[Math.min(maxIdx, SPEED_TIERS.length-1)];
+}
+function priceCapMo() { const t = speedTier(); return t ? t.cap_mo : 30; }
+
+function lcoEffectiveMonthlyPrice(lco) { return lco.subPriceMo + 0.5 * lco.subteams.ott; }
+function lcoDailyRevenue(lco) {
+  return lcoEffectiveMonthlyPrice(lco) * lco.customersI * (1 - REGIONS[lco.region].commission) * BILLING_DAILY_RATIO;
+}
+function lcoDailyConsumptionGb(lco) { return lco.customersI * REGIONS[lco.region].avg_gb; }
+
+// Target potential (where the LCO's potential drifts toward)
+function lcoTargetPotential(lco) {
+  const baseTarget = 12 * Math.pow(2, lco.level - 1) * REGIONS[lco.region].acq_mult;
+  // Modifiers from upgrades + sentiment + hotspots
+  const sentMult = 0.5 + 0.5 * (lco.sentiment/100);
+  const expMult = 1 + 0.10 * lco.subteams.expansion;
+  const installAdd = 5 * lco.subteams.install;
+  const expansionAdd = 10 * lco.subteams.expansion;
+  return baseTarget * sentMult * expMult + installAdd + expansionAdd;
+}
+
+// Rate at which potential drifts toward target (per game-day)
+function potentialDriftPerDay(lco) {
+  const dem = regionDemand(lco);
+  const infraMult = 1 + 0.20 * lco.subteams.infra;
+  const appMult = 1 + 0.10 * lco.subteams.app;
+  const ttBoost = Math.pow(1.03, state.ttSpent.lco || 0);
+  return 1.5 * Math.pow(1.5, lco.level-1) * dem * infraMult * appMult * REGIONS[lco.region].acq_mult * state.perRunMods.lcoAcqMult * ttBoost;
+}
+
+function bwGen(s) {
+  const ttBoost = Math.pow(1.03, state.ttSpent.bandwidth || 0);
+  const capEng = 1 + 0.10 * s.subteams.capeng;
+  return bwGenAt(s.level) * capEng * state.perRunMods.bwRateMult * ttBoost;
+}
+function bwUptime(s) { return Math.min(0.995, s.uptime + 0.005 * s.subteams.noc); }
+function totalBwPerDay() {
+  if (!state.unlocked.bwSuppliers) return 0;
+  let sum = 0;
+  for (const s of state.suppliers) {
+    if (s.failedUntilTick > state.tick) continue;
+    sum += bwGen(s);
+  }
+  return sum;
+}
+
+function totalDailyRevenue() {
+  let s = 0; for (const lco of state.lcos) s += lcoDailyRevenue(lco); return s;
+}
+function totalDailyConsumption() {
+  let s = 0; for (const lco of state.lcos) s += lcoDailyConsumptionGb(lco); return s;
+}
+
+// Apply upgrade
+function applyLcoUpgrade(lco, key) {
+  const lvl = lco.subteams[key] || 0;
+  switch(key) {
+    case 'install':
+      lco.potentialCapF += 5;
+      lco.subteams.install = lvl + 1;
+      break;
+    case 'expansion':
+      lco.potentialCapF += 10;
+      lco.subteams.expansion = lvl + 1;
+      break;
+    case 'support':
+      lco.sentiment = clamp(lco.sentiment + 8, 0, 100);
+      lco.subteams.support = lvl + 1;
+      break;
+    case 'infra':
+      lco.subteams.infra = lvl + 1;
+      break;
+    case 'app':
+      lco.sentiment = clamp(lco.sentiment + 4, 0, 100);
+      lco.subteams.app = lvl + 1;
+      break;
+    case 'ott':
+      lco.subteams.ott = lvl + 1;
+      break;
+    case 'level':
+      lco.level++;
+      lco.potentialCapF *= 2.0;
+      break;
+  }
+}
+
+// Auto-onboard customers from spare routers
+function autoOnboardLco(lco) {
+  while (state.routersInStock > 0 && lco.customersI < Math.floor(lco.potentialCapF)) {
+    state.routersInStock--;
+    lco.deployedRouters++;
+    state.totalDeployedRouters++;
+    lco.customersI++;
+    state.totalLifetimeCustomers++;
+  }
+}
+
+// =================================================================
+// SIMULATION
+// =================================================================
+function tick() {
+  state.tick++;
+
+  // Bandwidth auto-gen (smoothed per-tick)
+  if (state.unlocked.bwSuppliers) {
+    state.inventory += totalBwPerDay() / TICKS_PER_DAY;
+  }
+
+  // Revenue (smoothed per-tick)
+  if (state.lcos.length > 0) {
+    state.funds += totalDailyRevenue() / TICKS_PER_DAY;
+  }
+
+  // Manufacturer
+  const mfg = state.manufacturer;
+  const maxStock = mfgMaxStock(mfg.level);
+  if (mfg.pendingOrders > 0 || mfg.inStock < maxStock) {
+    mfg.progressTicks++;
+    if (mfg.progressTicks >= mfgTicksPerUnit(mfg.level)) {
+      mfg.progressTicks = 0;
+      if (mfg.pendingOrders > 0) {
+        mfg.pendingOrders--;
+        state.routersInStock++;
+      } else if (mfg.inStock < maxStock) {
+        mfg.inStock++;
+      }
+    }
+  } else {
+    mfg.progressTicks = 0;
+  }
+
+  // LCO potential drift + auto-onboard
+  for (const lco of state.lcos) {
+    if (lco.outageUntilTick > state.tick) continue;
+    const target = lcoTargetPotential(lco);
+    if (lco.potentialCapF < target) {
+      const driftPerTick = potentialDriftPerDay(lco) / TICKS_PER_DAY;
+      lco.potentialCapF = Math.min(target, lco.potentialCapF + driftPerTick);
+    } else if (lco.potentialCapF > target) {
+      // Slowly decay back if target dropped (e.g., sentiment fell)
+      const decayPerTick = potentialDriftPerDay(lco) / TICKS_PER_DAY * 0.5;
+      lco.potentialCapF = Math.max(target, lco.potentialCapF - decayPerTick);
+    }
+    // Auto-onboard if integer potential > customers AND router available
+    autoOnboardLco(lco);
+  }
+
+  // Consumption
+  drainConsumption();
+
+  // Per-game-day
+  if (state.tick > 0 && state.tick % TICKS_PER_DAY === 0) {
+    state.__noiseMult = rand(0.85, 1.20);
+    for (const s of state.suppliers) {
+      if (s.failedUntilTick > state.tick) continue;
+      if (Math.random() > bwUptime(s)) {
+        const baseHours = rand(1, 4);
+        const mitigation = 1 - 0.25 * s.subteams.backup;
+        const ttRel = Math.pow(0.95, state.ttSpent.reliability || 0);
+        const hours = baseHours * Math.max(0.25, mitigation) * ttRel;
+        s.failedUntilTick = state.tick + Math.floor(hours * TICKS_PER_HOUR);
+        notice('Outage: ' + s.name + ' (' + hours.toFixed(1) + ' game-hrs)');
+      }
+    }
+    onGameDay();
+  }
+
+  maybeRandomEvent();
+  state.market.listings = state.market.listings.filter(l => l.expiresAtTick > state.tick);
+
+  if (state.market.autoSell && state.inventory > state.market.autoSellThreshold) {
+    const excess = state.inventory - state.market.autoSellThreshold;
+    state.funds += excess * 0.005;
+    state.inventory -= excess;
+  }
+
+  checkUnlocks();
+
+  if (!state.creditUsed && state.funds < 0.01 && totalCustomersI() === 0 && state.tick > 200) {
+    state.funds += 10;
+    state.creditUsed = true;
+    notice('Supplier extended credit terms (+$10)');
+  }
+
+  render();
+}
+
+function drainConsumption() {
+  for (const lco of state.lcos) {
+    if (lco.outageUntilTick > state.tick) continue;
+    if (lco.customersI === 0) continue;
+    const regAvg = REGIONS[lco.region].avg_gb;
+    const eventFactor = state.eventBuffer.feastUntilTick > state.tick ? 1.5 : 1.0;
+    const consumption = lco.customersI * regAvg * eventFactor;
+    const perTick = consumption / TICKS_PER_DAY;
+    if (state.inventory >= perTick) state.inventory -= perTick;
+    else {
+      state.inventory = 0;
+      state.inventoryDriedToday = true;
+    }
+  }
+}
+
+function onGameDay() {
+  for (const lco of state.lcos) {
+    const r = REGIONS[lco.region];
+    let delta = 0;
+    if (lco.outageUntilTick <= state.tick) delta += 1;
+    if (lco.subPriceMo <= r.target_price_mo) delta += 1;
+    if (lco.subPriceMo > r.target_price_mo * 1.5) delta -= 2;
+    if (state.inventoryDriedToday) delta -= 4;
+    if (lco.deployedRouters < lco.customersI) delta -= 3;
+    delta = clamp(delta, -8, 4);
+    lco.sentiment = clamp(lco.sentiment + delta, 0, 100);
+
+    // Churn (integer)
+    const pricePenalty = 1 + Math.max(0, (lco.subPriceMo - r.target_price_mo) / r.target_price_mo);
+    const pChurn = 0.005 * Math.max(0.2, (100 - lco.sentiment)/50) * pricePenalty;
+    let leaving = 0;
+    for (let i = 0; i < lco.customersI; i++) if (Math.random() < pChurn) leaving++;
+    if (leaving > 0) {
+      lco.customersI = Math.max(0, lco.customersI - leaving);
+      lco.deployedRouters = Math.max(0, lco.deployedRouters - leaving);
+      state.totalDeployedRouters = Math.max(0, state.totalDeployedRouters - leaving);
+      state.routersInStock += leaving;
+    }
+  }
+  state.inventoryDriedToday = false;
+
+  // Market rotations
+  if (state.unlocked.lcoMarket) {
+    const idx = Math.floor(Math.random() * 3);
+    state.lcoMarket.offers[idx] = makeOffer();
+  }
+  if (state.unlocked.bwMarket && state.bwMarket.offers.length > 0) {
+    const idx = Math.floor(Math.random() * state.bwMarket.offers.length);
+    state.bwMarket.offers[idx] = makeBwOffer();
+  }
+
+  // Milestones
+  const T = totalCustomersI();
+  if (!state.inMilestones.c10 && T >= 10) { state.inMilestones.c10 = true; state.funds += 30; notice('Milestone: 10 customers (+$30)'); }
+  if (!state.inMilestones.c100 && T >= 100) { state.inMilestones.c100 = true; state.perRunMods.lcoAcqMult *= 1.2; notice('Milestone: 100 customers'); }
+  if (!state.inMilestones.c500 && T >= 500) { state.inMilestones.c500 = true; state.perRunMods.lcoAcqMult *= 1.1; notice('Milestone: 500 customers'); }
+  if (!state.inMilestones.c1000 && T >= 1000) { state.inMilestones.c1000 = true; state.perRunMods.bwRateMult *= 1.2; notice('Milestone: 1,000 customers'); }
+  if (!state.inMilestones.c5000 && T >= 5000) { state.inMilestones.c5000 = true; state.perRunMods.hsRateMult *= 1.5; notice('Milestone: 5,000 customers'); }
+}
+
+function maybeRandomEvent() {
+  if (!state.unlocked.outages) return;
+  if (state.tick - state.lastEventTick < TICKS_PER_DAY * 0.3) return;
+  if (Math.random() > 1/(TICKS_PER_DAY * 2)) return;
+  state.lastEventTick = state.tick;
+  const e = Math.floor(rand(0, 7));
+  switch(e) {
+    case 0: state.__noiseMult = rand(2.0, 3.0); notice('Supplier price surge'); break;
+    case 1: { if (!state.lcos.length) break; const lco = pick(state.lcos); lco.outageUntilTick = state.tick + Math.floor(rand(2,4) * TICKS_PER_HOUR); notice('Fibre cut in ' + lco.name); break; }
+    case 2: { if (!state.lcos.length) break; const lco = pick(state.lcos); lco.sentiment = clamp(lco.sentiment - 5, 0, 100); notice('Complaints at ' + lco.name); break; }
+    case 3: state.eventBuffer.woomUntilTick = state.tick + TICKS_PER_DAY; notice('Word of mouth — growth +20%'); break;
+    case 4: state.eventBuffer.feastUntilTick = state.tick + TICKS_PER_DAY; notice('Festival — consumption +50%'); break;
+    case 5: state.funds += 10; notice('Government grant — $10'); break;
+    case 6: spawnMarketListing(); spawnMarketListing(); notice('Discounted lot on marketplace'); break;
+  }
+}
+
+function spawnMarketListing() {
+  if (!state.unlocked.openMarketplace) return;
+  const kind = pick(['data','hotspot']);
+  let listing;
+  if (kind === 'data') {
+    const qty = Math.floor(rand(2000, 15000));
+    const supp = cheapestSupplier();
+    const rate = supp ? bwRateAt(supp.level) : 0.0095;
+    listing = { id: state.market.nextListingId++, kind, qty, ask: qty * rate * rand(0.60, 0.80), expiresAtTick: state.tick + Math.floor(rand(1,3)*TICKS_PER_HOUR) };
+  } else {
+    const qty = Math.floor(rand(2, 10));
+    listing = { id: state.market.nextListingId++, kind, qty, ask: qty * HS_PRICE * rand(0.60, 0.80), expiresAtTick: state.tick + Math.floor(rand(1,3)*TICKS_PER_HOUR) };
+  }
+  state.market.listings.push(listing);
+}
+
+// =================================================================
+// UNLOCKS
+// =================================================================
+function checkUnlocks() {
+  if (!state.unlocked.mfg && state.inventory >= 50) {
+    state.unlocked.mfg = true;
+    document.getElementById('mfg-section').classList.remove('hidden');
+    notice('Hardware Manufacturing unlocked. Manufacturer has 5 routers ready!');
+  }
+  if (!state.unlocked.lcoMarket && state.routersInStock >= 3) {
+    state.unlocked.lcoMarket = true;
+    seedLcoMarket();
+    document.getElementById('lco-market-section').classList.remove('hidden');
+    document.getElementById('lcos-section').classList.remove('hidden');
+    notice('LCO partnership offers available.');
+  }
+  if (!state.unlocked.bwMarket && state.lcos.length >= 1) {
+    state.unlocked.bwMarket = true;
+    state.unlocked.bwSuppliers = true;
+    state.unlocked.openMarketplace = true;
+    state.unlocked.outages = true;
+    seedBwMarket();
+    document.getElementById('bw-market-section').classList.remove('hidden');
+    document.getElementById('bw-section').classList.remove('hidden');
+    document.getElementById('open-marketplace-section').classList.remove('hidden');
+    notice('Bandwidth Market + Open Marketplace available. Hire a Bandwidth Partner to start auto-bandwidth.');
+  }
+  if (!state.unlocked.lcoSubteams && state.lcos.length >= 2) {
+    state.unlocked.lcoSubteams = true;
+    notice('LCO sub-teams unlocked.');
+  }
+  if (!state.unlocked.bwSubteams && state.suppliers.some(s => s.level >= 3)) {
+    state.unlocked.bwSubteams = true;
+    notice('Bandwidth sub-teams unlocked.');
+  }
+  if (!state.unlocked.prestige && totalCustomersI() >= 10000) {
+    state.unlocked.prestige = true;
+    document.getElementById('prestige-panel').classList.remove('hidden');
+    notice('Prestige unlocked.');
+  }
+}
+
+// =================================================================
+// HINT
+// =================================================================
+function nextHint() {
+  if (!state.unlocked.mfg) {
+    const left = Math.max(0, 50 - Math.floor(state.inventory));
+    return 'Click Generate Data to mine 50 GB. (' + left + ' GB to go)';
+  }
+  if (!state.unlocked.lcoMarket) {
+    const need = Math.max(0, 3 - state.routersInStock);
+    if (need > 0) {
+      return 'Buy ' + need + ' more routers from the manufacturer to unlock LCO partnerships.';
+    }
+  }
+  if (state.lcos.length === 0) {
+    return 'Partner with an LCO from the market. Buy EXTRA routers first to auto-onboard more customers at partnership!';
+  }
+  if (state.suppliers.length === 0) {
+    return 'Click "Hire a Bandwidth Partner" above or browse the Bandwidth Market → to start auto-bandwidth.';
+  }
+  if (state.lcos.some(l => l.customersI > l.deployedRouters)) {
+    return 'Customers without routers — buy more!';
+  }
+  if (!state.unlocked.prestige && totalCustomersI() >= 100) {
+    return 'Prestige unlocks at 10,000 customers (' + fmtI(10000 - totalCustomersI()) + ' more).';
+  }
+  return '';
+}
+
+// =================================================================
+// PERSISTENT CARD CACHES (the click-fix refactor)
+// =================================================================
+const cardCache = {
+  lcos: new Map(),         // lco.id -> { card, refs }
+  suppliers: new Map(),    // s.id -> { card, refs }
+  lcoOffers: new Map(),    // offer.id -> { card, refs }
+  bwOffers: new Map(),     // offer.id -> { card, refs }
+  marketListings: new Map(),  // listing.id -> { card, refs }
+};
+
+function el(tag, attrs, children) {
+  const e = document.createElement(tag);
+  if (attrs) for (const k in attrs) { if (k === 'class') e.className = attrs[k]; else if (k === 'style') e.style.cssText = attrs[k]; else e.setAttribute(k, attrs[k]); }
+  if (children) for (const c of children) { if (c == null) continue; e.appendChild(typeof c === 'string' ? document.createTextNode(c) : c); }
+  return e;
+}
+function span(cls) { const s = document.createElement('span'); if (cls) s.className = cls; return s; }
+function btn(label, onclick) { const b = document.createElement('button'); b.textContent = label; b.addEventListener('click', onclick); return b; }
+
+// =================================================================
+// LCO CARD
+// =================================================================
+function getOrCreateLcoCard(lco) {
+  let entry = cardCache.lcos.get(lco.id);
+  if (entry) return entry;
+
+  const card = el('div', { class:'lco' });
+  const h3 = el('h3'); card.appendChild(h3);
+  const stat1 = el('div', { class:'row stat-line' }); card.appendChild(stat1);
+  const stat2 = el('div', { class:'row small' }); card.appendChild(stat2);
+
+  // Price row
+  const priceRow = el('div', { class:'row' });
+  const lowerBtn = btn('-', () => {
+    lco.subPriceMo = clamp(lco.subPriceMo - 0.5, 1.0, Math.min(30.0, priceCapMo()));
+    render();
+  });
+  const raiseBtn = btn('+', () => {
+    lco.subPriceMo = clamp(lco.subPriceMo + 0.5, 1.0, Math.min(30.0, priceCapMo()));
+    render();
+  });
+  const priceLabel = span();
+  priceRow.appendChild(document.createTextNode('Subscription: '));
+  priceRow.appendChild(lowerBtn);
+  priceRow.appendChild(raiseBtn);
+  priceRow.appendChild(document.createTextNode(' '));
+  priceRow.appendChild(priceLabel);
+  card.appendChild(priceRow);
+
+  const demandRow = el('div', { class:'row small' }); card.appendChild(demandRow);
+
+  // Upgrade buttons (persistent)
+  const upgList = el('div', { class:'upgrade-list', style:'margin-top:4px;' });
+  upgList.appendChild(el('strong', null, ['Available upgrades:']));
+  const upgKeys = ['install','expansion','support','infra','app','ott','level'];
+  const upgBtns = {};
+  for (const key of upgKeys) {
+    const b = document.createElement('button');
+    b.addEventListener('click', () => {
+      const cost = key === 'level' ? lcoUpgradeCost(lco.level) : subTeamCost(lco.subteams[key] || 0);
+      if (state.funds < cost) return;
+      const lvl = key === 'level' ? lco.level : (lco.subteams[key] || 0);
+      if (key !== 'level' && lvl >= 5) return;
+      state.funds -= cost;
+      applyLcoUpgrade(lco, key);
+      // Immediate auto-onboard after potential bump
+      autoOnboardLco(lco);
+      render();
+    });
+    upgList.appendChild(b);
+    upgBtns[key] = b;
+  }
+  card.appendChild(upgList);
+
+  // Fire button
+  const fireBtn = btn('Fire LCO', () => {
+    if (!confirm('Fire ' + lco.name + '? 50% of customers migrate; 50% of routers return.')) return;
+    fireLcoById(lco.id);
+    render();
+  });
+  fireBtn.className = 'small';
+  fireBtn.style.marginTop = '4px';
+  card.appendChild(fireBtn);
+
+  document.getElementById('lco-list').appendChild(card);
+  const refs = { card, h3, stat1, stat2, priceLabel, demandRow, upgBtns };
+  entry = { card, refs };
+  cardCache.lcos.set(lco.id, entry);
+  return entry;
+}
+
+function updateLcoCard(lco, refs) {
+  const r = REGIONS[lco.region];
+  const dem = regionDemand(lco) * 100;
+  const grow = potentialDriftPerDay(lco);
+  const dailyRev = lcoDailyRevenue(lco);
+  const dailyCons = lcoDailyConsumptionGb(lco);
+  const outage = lco.outageUntilTick > state.tick ? ' [OUTAGE]' : '';
+
+  refs.h3.textContent = lco.name + ' · ' + lco.region + ' · Lvl ' + lco.level + outage;
+  refs.stat1.innerHTML = 'Customers: <span class="num">' + lco.customersI + '</span> / <span class="num">' + lco.potentialCapF.toFixed(3) + '</span> potential · Sentiment: <span class="num">' + Math.round(lco.sentiment) + '%</span>';
+  refs.stat2.innerHTML = 'Routers deployed: ' + lco.deployedRouters + ' · Daily revenue: <span class="gain">$' + fmt(dailyRev) + '</span> · GB use: ' + fmtI(dailyCons) + ' / day';
+  refs.priceLabel.innerHTML = '$' + fmt(lcoEffectiveMonthlyPrice(lco)) + '/month' + (lco.subteams.ott > 0 ? ' <span class="gain small">(+$' + fmt(0.5 * lco.subteams.ott) + ' OTT)</span>' : '') + ' <span class="small">(target $' + fmt(r.target_price_mo) + ' · max $' + fmt(priceCapMo()) + ')</span>';
+  refs.demandRow.innerHTML = 'Demand: ' + dem.toFixed(0) + '% · Growth: ' + fmt(grow, 2) + ' cust/day · Commission: ' + (r.commission*100).toFixed(0) + '%';
+
+  // Update upgrade buttons
+  const upgrades = {
+    install:   { label:'Install Crew',     effect:'+5 potential' },
+    expansion: { label:'Expansion (fibre)', effect:'+10 potential' },
+    support:   { label:'Customer Support',  effect:'+8 sentiment' },
+    infra:     { label:'ONU/OLT Infra',     effect:'+20% growth' },
+    app:       { label:'Customer App',      effect:'+4 sentiment, +10% growth' },
+    ott:       { label:'OTT Add-on',        effect:'+$0.50/mo bundled' },
+    level:     { label:'Upgrade Level',     effect:'×2 potential, faster growth' },
+  };
+  for (const key of Object.keys(upgrades)) {
+    const u = upgrades[key];
+    const lvl = key === 'level' ? lco.level - 1 : (lco.subteams[key] || 0);
+    const cost = key === 'level' ? lcoUpgradeCost(lco.level) : subTeamCost(lco.subteams[key] || 0);
+    const maxed = key !== 'level' && lvl >= 5;
+    const disabledByMisc = (key === 'support' && lco.sentiment >= 99) || (key === 'app' && lco.sentiment >= 99);
+    const b = refs.upgBtns[key];
+    b.textContent = u.label + ' (Lv ' + lvl + ') · $' + fmtI(cost) + ' · ' + u.effect;
+    b.disabled = maxed || state.funds < cost || disabledByMisc;
+  }
+}
+
+function fireLcoById(id) {
+  const lco = state.lcos.find(x => x.id === id);
+  if (!lco) return;
+  const others = state.lcos.filter(o => o.id !== id && o.region === lco.region);
+  let migrated = 0;
+  for (let i = 0; i < lco.customersI; i++) {
+    if (others.length > 0 && Math.random() < 0.5) {
+      const target = pick(others);
+      target.customersI++; target.potentialCapF = Math.max(target.potentialCapF, target.customersI);
+      target.deployedRouters++;
+      migrated++;
+    }
+  }
+  const ret = Math.floor(lco.deployedRouters * 0.5);
+  state.routersInStock += ret;
+  state.totalDeployedRouters -= lco.deployedRouters;
+  state.lcos = state.lcos.filter(x => x.id !== id);
+  // Remove card
+  const entry = cardCache.lcos.get(id);
+  if (entry) { entry.card.remove(); cardCache.lcos.delete(id); }
+  notice('Fired ' + lco.name + ' — ' + migrated + ' migrated, ' + ret + ' routers returned.');
+}
+
+function renderLcoList() {
+  const seen = new Set();
+  for (const lco of state.lcos) {
+    seen.add(lco.id);
+    const { refs } = getOrCreateLcoCard(lco);
+    updateLcoCard(lco, refs);
+  }
+  for (const [id, entry] of cardCache.lcos) {
+    if (!seen.has(id)) { entry.card.remove(); cardCache.lcos.delete(id); }
+  }
+}
+
+// =================================================================
+// SUPPLIER CARD
+// =================================================================
+function getOrCreateSupplierCard(s) {
+  let entry = cardCache.suppliers.get(s.id);
+  if (entry) return entry;
+  const card = el('div', { class:'bw-team' });
+  const h3 = el('h3'); card.appendChild(h3);
+  const stat1 = el('div', { class:'row small' }); card.appendChild(stat1);
+  const stat2 = el('div', { class:'row stat-line' }); card.appendChild(stat2);
+
+  const upgList = el('div', { class:'upgrade-list', style:'margin-top:4px;' });
+  upgList.appendChild(el('strong', null, ['Available upgrades:']));
+  const upgKeys = ['level','procurement','noc','capeng','backup'];
+  const upgBtns = {};
+  for (const key of upgKeys) {
+    const b = document.createElement('button');
+    b.addEventListener('click', () => {
+      if (key === 'level') {
+        const c = bwCostAt(s.level);
+        if (state.funds >= c) { state.funds -= c; s.level++; render(); }
+      } else {
+        const lvl = s.subteams[key] || 0;
+        if (lvl >= 5) return;
+        const cost = subTeamCost(lvl);
+        if (state.funds >= cost) { state.funds -= cost; s.subteams[key] = lvl + 1; render(); }
+      }
+    });
+    upgList.appendChild(b);
+    upgBtns[key] = b;
+  }
+  card.appendChild(upgList);
+
+  document.getElementById('bw-teams').appendChild(card);
+  const refs = { card, h3, stat1, stat2, upgBtns };
+  entry = { card, refs };
+  cardCache.suppliers.set(s.id, entry);
+  return entry;
+}
+
+function updateSupplierCard(s, refs) {
+  const failed = s.failedUntilTick > state.tick;
+  const tier = SPEED_TIERS[Math.min(s.level-1, SPEED_TIERS.length-1)];
+  const effRate = bwRateAt(s.level) * (1 - 0.02 * s.subteams.procurement);
+  refs.h3.textContent = s.name + ' · Lvl ' + s.level + (failed ? ' [OUT]' : '');
+  refs.stat1.innerHTML = 'Speed: ' + tier.tier + ' · Rate: $' + effRate.toFixed(5) + '/GB · Uptime: ' + (bwUptime(s)*100).toFixed(1) + '%';
+  refs.stat2.innerHTML = 'Generation: <span class="num">' + fmtI(bwGen(s)) + '</span> GB / game-day';
+
+  const upgrades = {
+    level:       { label:'Upgrade Tier',         effect:'×2.5 generation, higher speed' },
+    procurement: { label:'Procurement',          effect:'−2% per-GB rate' },
+    noc:         { label:'Network Ops (NOC)',    effect:'+0.5% uptime' },
+    capeng:      { label:'Capacity Engineering', effect:'+10% generation' },
+    backup:      { label:'Supplier Backup',      effect:'−25% outage duration' },
+  };
+  for (const key of Object.keys(upgrades)) {
+    const u = upgrades[key];
+    const lvl = key === 'level' ? s.level - 1 : (s.subteams[key] || 0);
+    const cost = key === 'level' ? bwCostAt(s.level) : subTeamCost(s.subteams[key] || 0);
+    const maxed = key !== 'level' && lvl >= 5;
+    const hide = key !== 'level' && !state.unlocked.bwSubteams;
+    const b = refs.upgBtns[key];
+    b.style.display = hide ? 'none' : 'block';
+    b.textContent = u.label + ' (Lv ' + lvl + ') · $' + fmtI(cost) + ' · ' + u.effect;
+    b.disabled = maxed || state.funds < cost;
+  }
+}
+
+function renderSuppliers() {
+  const seen = new Set();
+  for (const s of state.suppliers) {
+    seen.add(s.id);
+    const { refs } = getOrCreateSupplierCard(s);
+    updateSupplierCard(s, refs);
+  }
+  for (const [id, entry] of cardCache.suppliers) {
+    if (!seen.has(id)) { entry.card.remove(); cardCache.suppliers.delete(id); }
+  }
+}
+
+// =================================================================
+// LCO MARKET OFFER CARD
+// =================================================================
+function getOrCreateLcoOfferCard(offer, idx) {
+  let entry = cardCache.lcoOffers.get(offer.id);
+  if (entry) {
+    // Keep idx for partner click handler
+    entry.idx = idx;
+    return entry;
+  }
+  const card = el('div', { class:'offer' });
+  const h3 = el('h3'); card.appendChild(h3);
+  const r1 = el('div', { class:'row' }); card.appendChild(r1);
+  const r2 = el('div', { class:'row small gain' }); card.appendChild(r2);
+  const r3 = el('div', { class:'row small' }); card.appendChild(r3);
+  const r4 = el('div', { class:'row' }); card.appendChild(r4);
+  const partnerRow = el('div', { class:'row' });
+  const partnerBtn = btn('Partner', () => {
+    const ent = cardCache.lcoOffers.get(offer.id);
+    if (!ent) return;
+    const o = state.lcoMarket.offers[ent.idx];
+    if (!o || o.id !== offer.id) return;
+    if (state.funds < o.cost || state.routersInStock < o.hsReq || state.inventory < o.gbReq) return;
+    state.funds -= o.cost;
+    state.routersInStock -= o.hsReq;
+    state.totalDeployedRouters += o.hsReq;
+    state.totalLifetimeCustomers += o.customers;
+    const lco = makeLCOFromOffer(o);
+    state.lcos.push(lco);
+    // Auto-onboard from spare routers (per user spec)
+    autoOnboardLco(lco);
+    // Replace this offer slot
+    state.lcoMarket.offers[ent.idx] = makeOffer();
+    // Remove this card from cache; new offer will create new card
+    cardCache.lcoOffers.delete(offer.id);
+    card.remove();
+    notice('Partnered with ' + lco.name + '! +' + (lco.customersI) + ' customers (including auto-onboard).');
+    checkUnlocks();
+    if (state.unlocked.openMarketplace && state.market.listings.length === 0) {
+      spawnMarketListing(); spawnMarketListing();
+    }
+    render();
+  });
+  partnerRow.appendChild(partnerBtn);
+  card.appendChild(partnerRow);
+  document.getElementById('lco-offers').appendChild(card);
+  const refs = { card, h3, r1, r2, r3, r4, partnerBtn };
+  entry = { card, refs, idx };
+  cardCache.lcoOffers.set(offer.id, entry);
+  return entry;
+}
+
+function updateLcoOfferCard(offer, refs) {
+  const dailyEst = offer.customers * offer.subPriceMo * BILLING_DAILY_RATIO * (1 - REGIONS[offer.region].commission);
+  const canAfford = state.funds >= offer.cost;
+  const hasHs = state.routersInStock >= offer.hsReq;
+  const hasGb = state.inventory >= offer.gbReq;
+  const can = canAfford && hasHs && hasGb;
+  refs.h3.textContent = offer.name + ' · ' + offer.region;
+  refs.r1.innerHTML = 'Inherits <span class="num">' + offer.customers + '</span> customers @ $' + fmt(offer.subPriceMo) + '/mo';
+  refs.r2.textContent = '≈ $' + fmt(dailyEst) + ' / game-day';
+  refs.r3.innerHTML = 'Needs <span class="' + (hasHs?'':'warn') + '">' + offer.hsReq + ' routers</span> (have ' + state.routersInStock + ') · <span class="' + (hasGb?'':'warn') + '">' + fmtI(offer.gbReq) + ' GB</span> (have ' + fmtI(state.inventory) + ')';
+  refs.r4.innerHTML = 'Partnership: $<span class="num">' + fmtI(offer.cost) + '</span> ' + (canAfford?'':'<span class="warn small">short $' + fmtI(offer.cost - state.funds) + '</span>');
+  refs.partnerBtn.disabled = !can;
+}
+
+function renderLcoMarket() {
+  const seen = new Set();
+  state.lcoMarket.offers.forEach((offer, idx) => {
+    seen.add(offer.id);
+    const { refs } = getOrCreateLcoOfferCard(offer, idx);
+    updateLcoOfferCard(offer, refs);
+  });
+  for (const [id, entry] of cardCache.lcoOffers) {
+    if (!seen.has(id)) { entry.card.remove(); cardCache.lcoOffers.delete(id); }
+  }
+  document.getElementById('btn-refresh-lco-offers').disabled = state.funds < 10;
+}
+
+// =================================================================
+// BW MARKET OFFER CARD
+// =================================================================
+function getOrCreateBwOfferCard(offer, idx) {
+  let entry = cardCache.bwOffers.get(offer.id);
+  if (entry) { entry.idx = idx; return entry; }
+  const card = el('div', { class:'partner-card' });
+  const h3 = el('h3'); card.appendChild(h3);
+  const r1 = el('div', { class:'row small' }); card.appendChild(r1);
+  const r2 = el('div', { class:'row' }); card.appendChild(r2);
+  const r3 = el('div', { class:'row' }); card.appendChild(r3);
+  const r4 = el('div', { class:'row' });
+  const hireBtn = btn('Hire', () => {
+    const ent = cardCache.bwOffers.get(offer.id);
+    if (!ent) return;
+    const o = state.bwMarket.offers[ent.idx];
+    if (!o || o.id !== offer.id || state.funds < o.setupCost) return;
+    state.funds -= o.setupCost;
+    state._usedSupplierNames.add(o.name);
+    state.suppliers.push({
+      id: state.nextSupplierId++, name: o.name, level: o.lvl, uptime: 0.96, failedUntilTick: 0,
+      subteams: { procurement:0, noc:0, capeng:0, latency:0, backup:0 }
+    });
+    state.bwMarket.offers[ent.idx] = makeBwOffer();
+    cardCache.bwOffers.delete(offer.id);
+    card.remove();
+    notice('Hired ' + o.name);
+    render();
+  });
+  r4.appendChild(hireBtn);
+  card.appendChild(r4);
+  document.getElementById('bw-offers').appendChild(card);
+  const refs = { card, h3, r1, r2, r3, hireBtn };
+  entry = { card, refs, idx };
+  cardCache.bwOffers.set(offer.id, entry);
+  return entry;
+}
+
+function updateBwOfferCard(offer, refs) {
+  const can = state.funds >= offer.setupCost;
+  refs.h3.textContent = offer.name + ' · ' + offer.tierName;
+  refs.r1.innerHTML = 'Speed: ' + offer.speedTier.tier + ' · Rate: $' + offer.rate.toFixed(5) + '/GB';
+  refs.r2.innerHTML = 'Generation: <span class="num">' + fmtI(offer.gen) + '</span> GB / game-day';
+  refs.r3.innerHTML = 'Setup: $<span class="num">' + fmtI(offer.setupCost) + '</span>';
+  refs.hireBtn.disabled = !can;
+}
+
+function renderBwMarket() {
+  const seen = new Set();
+  state.bwMarket.offers.forEach((offer, idx) => {
+    seen.add(offer.id);
+    const { refs } = getOrCreateBwOfferCard(offer, idx);
+    updateBwOfferCard(offer, refs);
+  });
+  for (const [id, entry] of cardCache.bwOffers) {
+    if (!seen.has(id)) { entry.card.remove(); cardCache.bwOffers.delete(id); }
+  }
+  document.getElementById('btn-refresh-bw-offers').disabled = state.funds < 10;
+}
+
+// =================================================================
+// MARKET LISTING
+// =================================================================
+function getOrCreateMarketListingCard(l) {
+  let entry = cardCache.marketListings.get(l.id);
+  if (entry) return entry;
+  const card = el('div', { class:'market-listing' });
+  const buyBtn = btn('Buy', () => {
+    const item = state.market.listings.find(x => x.id === l.id);
+    if (!item || state.funds < item.ask) return;
+    state.funds -= item.ask;
+    if (item.kind === 'data') state.inventory += item.qty;
+    if (item.kind === 'hotspot') state.routersInStock += item.qty;
+    state.market.listings = state.market.listings.filter(x => x.id !== item.id);
+    cardCache.marketListings.delete(l.id);
+    card.remove();
+    render();
+  });
+  const text = span();
+  card.appendChild(buyBtn);
+  card.appendChild(document.createTextNode(' '));
+  card.appendChild(text);
+  document.getElementById('market-listings').appendChild(card);
+  const refs = { card, buyBtn, text };
+  entry = { card, refs };
+  cardCache.marketListings.set(l.id, entry);
+  return entry;
+}
+
+function updateMarketListingCard(l, refs) {
+  const ticksLeft = l.expiresAtTick - state.tick;
+  const secLeft = Math.max(0, Math.floor(ticksLeft * TICK_MS / 1000));
+  const label = l.kind === 'data' ? l.qty + ' GB data' : l.qty + ' routers';
+  refs.text.innerHTML = label + ' &nbsp; <span class="small">$' + fmt(l.ask) + ' · ' + secLeft + 's</span>';
+  refs.buyBtn.disabled = state.funds < l.ask;
+}
+
+function renderOpenMarketplace() {
+  document.getElementById('sell-data-offer').textContent = fmt(1000 * clickCost() * 0.5, 0);
+  document.getElementById('sell-hotspot-offer').textContent = fmt(5 * HS_PRICE * 0.5, 0);
+  document.getElementById('sell-data').disabled = state.inventory < 1000;
+  document.getElementById('sell-hotspot').disabled = state.routersInStock < 5;
+
+  const seen = new Set();
+  const emptyMsg = document.querySelector('#market-listings > .small');
+  if (state.market.listings.length === 0) {
+    if (!emptyMsg) {
+      const m = el('div', { class:'small' }, ['No listings right now.']);
+      document.getElementById('market-listings').appendChild(m);
+    }
+  } else {
+    if (emptyMsg) emptyMsg.remove();
+    for (const l of state.market.listings) {
+      seen.add(l.id);
+      const { refs } = getOrCreateMarketListingCard(l);
+      updateMarketListingCard(l, refs);
+    }
+  }
+  for (const [id, entry] of cardCache.marketListings) {
+    if (!seen.has(id)) { entry.card.remove(); cardCache.marketListings.delete(id); }
+  }
+}
+
+// =================================================================
+// TT MENU
+// =================================================================
+let ttMenuBuilt = false;
+const ttButtons = {};
+function buildTtMenu() {
+  if (ttMenuBuilt) return;
+  ttMenuBuilt = true;
+  const host = document.getElementById('tt-spend-menu');
+  const tracks = [
+    ['hardware','Hardware Eff (Mfg speed +3%/TT)', 25],
+    ['lco','LCO Eff (Growth +3%/TT)', 25],
+    ['bandwidth','Bandwidth Eff (Gen +3%/TT)', 25],
+    ['reliability','Reliability (Failures ×0.95/TT)', 10],
+    ['capital','Capital (Starting $ +$100/TT)', 20],
+  ];
+  for (const [k, label, max] of tracks) {
+    const row = el('div', { class:'row' });
+    const b = document.createElement('button');
+    b.addEventListener('click', () => {
+      if (state.tt > 0 && (state.ttSpent[k]||0) < max) {
+        state.ttSpent[k] = (state.ttSpent[k]||0) + 1;
+        state.tt -= 1;
+        render();
+      }
+    });
+    const lvlText = span();
+    row.appendChild(b);
+    row.appendChild(document.createTextNode(' '));
+    row.appendChild(lvlText);
+    host.appendChild(row);
+    ttButtons[k] = { btn: b, lvlText, label, max };
+  }
+}
+function updateTtMenu() {
+  buildTtMenu();
+  for (const k of Object.keys(ttButtons)) {
+    const info = ttButtons[k];
+    const lvl = state.ttSpent[k] || 0;
+    info.btn.textContent = '+1 to ' + info.label;
+    info.btn.disabled = state.tt <= 0 || lvl >= info.max;
+    info.lvlText.textContent = ' L' + lvl + '/' + info.max;
+  }
+}
+
+// =================================================================
+// MFG (top-section update)
+// =================================================================
+function renderMfg() {
+  const mfg = state.manufacturer;
+  document.getElementById('mfg-level').textContent = mfg.level;
+  document.getElementById('mfg-stock').textContent = mfg.inStock;
+  document.getElementById('mfg-max').textContent = mfgMaxStock(mfg.level);
+  document.getElementById('pending-orders').textContent = mfg.pendingOrders;
+  const ticks = mfgTicksPerUnit(mfg.level);
+  const realSec = (ticks * TICK_MS / 1000).toFixed(1);
+  const remTicks = (mfg.pendingOrders > 0 || mfg.inStock < mfgMaxStock(mfg.level))
+    ? Math.max(0, ticks - mfg.progressTicks) : 0;
+  const remSec = (remTicks * TICK_MS / 1000).toFixed(1);
+  document.getElementById('pending-rate-line').textContent = (mfg.pendingOrders > 0)
+    ? '· next in ' + remSec + 's (1 / ' + realSec + 's)'
+    : (mfg.inStock < mfgMaxStock(mfg.level) ? '· replenishing (next ' + remSec + 's)' : '· line idle');
+  document.getElementById('btn-order-1').disabled = state.funds < HS_PRICE;
+  document.getElementById('btn-order-5').disabled = state.funds < HS_BULK5_PRICE;
+  document.getElementById('btn-order-25').disabled = state.funds < HS_BULK25_PRICE;
+  document.getElementById('mfg-upgrade-cost').textContent = fmtI(mfgCostAt(mfg.level));
+  document.getElementById('btn-upgrade-mfg').disabled = state.funds < mfgCostAt(mfg.level);
+}
+
+// =================================================================
+// RENDER (top-level, called per tick)
+// =================================================================
+function render() {
+  // Clock
+  const day = Math.floor(state.tick / TICKS_PER_DAY) + 1;
+  const rem = state.tick % TICKS_PER_DAY;
+  const hour = Math.floor(rem / TICKS_PER_HOUR);
+  const minute = Math.floor((rem % TICKS_PER_HOUR) * 60 / TICKS_PER_HOUR);
+  document.getElementById('clock').textContent = 'Day ' + day + ', ' + String(hour).padStart(2,'0') + ':' + String(minute).padStart(2,'0');
+
+  document.getElementById('hint').textContent = nextHint();
+
+  if (state.tt > 0 || Object.values(state.ttSpent).some(v=>v>0)) {
+    document.getElementById('tt-bar').classList.remove('hidden');
+    document.getElementById('tt-display').textContent = state.tt;
+    const spent = Object.entries(state.ttSpent).filter(([k,v])=>v>0).map(([k,v])=>k+':'+v).join(' ');
+    document.getElementById('tt-spent').textContent = spent ? ' | spent: ' + spent : '';
+  }
+
+  // Customer count (integer)
+  document.getElementById('customers').textContent = fmtI(totalCustomersI());
+
+  // Click cost
+  const supp = cheapestSupplier();
+  document.getElementById('cheap-supplier-label').textContent = supp ? '(from ' + supp.name + ')' : '(open market)';
+  document.getElementById('click-cost-display').textContent = '$' + clickCost().toFixed(5);
+  const trend = (state.__noiseMult||1) > 1.05 ? ' (▲)' : (state.__noiseMult||1) < 0.95 ? ' (▼)' : '';
+  document.getElementById('supplier-trend').textContent = trend;
+
+  // Top stats
+  document.getElementById('funds').textContent = fmt(state.funds);
+  const dailyRev = totalDailyRevenue();
+  document.getElementById('funds-rate').innerHTML = dailyRev > 0
+    ? '<span class="gain">(earning $' + fmt(dailyRev) + ' / game-day)</span>'
+    : '';
+  document.getElementById('inventory').textContent = fmt(state.inventory, 2);
+  const dailyUse = totalDailyConsumption();
+  const totalGen = totalBwPerDay();
+  document.getElementById('inv-rate').innerHTML = dailyUse > 0
+    ? '<span class="small">(consume ' + fmtI(dailyUse) + ' / gen ' + fmtI(totalGen) + ' GB / game-day)</span>'
+    : (totalGen > 0 ? '<span class="small">(gen ' + fmtI(totalGen) + ' GB / game-day)</span>' : '');
+  document.getElementById('routers-stock').textContent = state.routersInStock;
+
+  // Top auto-bandwidth row
+  const primary = primarySupplier();
+  if (!primary) {
+    document.getElementById('auto-rate').textContent = 'none (no supplier hired)';
+    document.getElementById('btn-top-upgrade').textContent = 'Hire a Bandwidth Partner →';
+    document.getElementById('btn-top-upgrade').disabled = !state.unlocked.bwMarket;
+    document.getElementById('auto-hint').textContent = state.unlocked.bwMarket
+      ? '· browse the market on the right'
+      : '· market unlocks after first LCO partnership';
+  } else {
+    document.getElementById('auto-rate').innerHTML = '<span class="num">' + fmtI(totalGen) + '</span> GB / game-day from <span class="num">' + state.suppliers.length + '</span> supplier' + (state.suppliers.length === 1 ? '' : 's');
+    const cost = bwCostAt(primary.level);
+    const newGen = bwGenAt(primary.level + 1);
+    const delta = Math.round(newGen - bwGenAt(primary.level));
+    document.getElementById('btn-top-upgrade').textContent = 'Upgrade ' + primary.name + ' to Lv ' + (primary.level + 1) + ' ($' + fmtI(cost) + ' → +' + delta + ' GB/day)';
+    document.getElementById('btn-top-upgrade').disabled = state.funds < cost;
+    document.getElementById('auto-hint').textContent = (dailyUse > totalGen)
+      ? '· SHORTAGE: consumption ' + fmtI(dailyUse) + ' > generation ' + fmtI(totalGen) + ' GB/day'
+      : '';
+  }
+
+  // Persistent-DOM renders
+  if (state.lcos.length > 0) renderLcoList();
+  if (state.unlocked.bwSuppliers) {
+    document.getElementById('bw-buy-cost').textContent = fmt((supp ? bwRateAt(supp.level)*(1-0.02*supp.subteams.procurement) : 0.0095) * 10000);
+    renderSuppliers();
+  }
+  if (state.unlocked.mfg) renderMfg();
+  if (state.unlocked.lcoMarket) renderLcoMarket();
+  if (state.unlocked.bwMarket) renderBwMarket();
+  if (state.unlocked.openMarketplace) renderOpenMarketplace();
+
+  if (state.unlocked.prestige) {
+    document.getElementById('prestige-lifetime').textContent = fmtI(state.totalLifetimeCustomers);
+    document.getElementById('prestige-tt').textContent = Math.floor(Math.sqrt(state.totalLifetimeCustomers/100));
+    updateTtMenu();
+  }
+}
+
+// =================================================================
+// FIXED BUTTON HANDLERS
+// =================================================================
+function wireFixedHandlers() {
+  let gameStarted = false;
+  function startGame() {
+    if (gameStarted) return;
+    gameStarted = true;
+    try {
+      const nameInput = document.getElementById('company-input').value.trim();
+      const name = nameInput || 'Telecom Tycoon';
+      document.getElementById('welcome').style.display = 'none';
+      const gameUi = document.getElementById('game-ui');
+      gameUi.classList.remove('hidden');
+      gameUi.style.display = 'block';
+      initState(null, name);
+      render();
+      setInterval(tick, TICK_MS);
+    } catch (e) {
+      console.error('Start failed:', e);
+      const notice = document.getElementById('notice');
+      if (notice) notice.textContent = '> Start failed: ' + e.message;
+      gameStarted = false;
+    }
+  }
+  document.getElementById('start-btn').onclick = startGame;
+  document.getElementById('company-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); startGame(); }
+  });
+
+  document.getElementById('btn-generate').onclick = () => {
+    const c = clickCost();
+    if (state.funds < c) { notice('Insufficient funds.'); return; }
+    state.funds -= c;
+    state.inventory += 1;
+    render();
+  };
+
+  // Top auto-bandwidth button: upgrade primary supplier OR scroll to BW market
+  document.getElementById('btn-top-upgrade').onclick = () => {
+    const primary = primarySupplier();
+    if (!primary) {
+      try {
+        const sec = document.getElementById('bw-market-section');
+        if (sec && !sec.classList.contains('hidden') && sec.scrollIntoView) sec.scrollIntoView({ behavior:'smooth', block:'center' });
+      } catch (e) { /* scrollIntoView unsupported in test envs */ }
+      return;
+    }
+    const c = bwCostAt(primary.level);
+    if (state.funds >= c) {
+      state.funds -= c;
+      primary.level++;
+      notice('Upgraded ' + primary.name + ' to Lv ' + primary.level);
+      render();
+    }
+  };
+
+  document.getElementById('btn-buy-bw').onclick = () => {
+    const supp = cheapestSupplier();
+    const rate = supp ? bwRateAt(supp.level) * (1 - 0.02 * supp.subteams.procurement) : 0.0095;
+    const cost = 10000 * rate;
+    if (state.funds < cost) { notice('Need $' + fmt(cost)); return; }
+    state.funds -= cost;
+    state.inventory += 10000;
+    render();
+  };
+
+  function orderRouters(n, cost) {
+    if (state.funds < cost) return;
+    state.funds -= cost;
+    const fromStock = Math.min(n, state.manufacturer.inStock);
+    state.manufacturer.inStock -= fromStock;
+    state.routersInStock += fromStock;
+    const remaining = n - fromStock;
+    state.manufacturer.pendingOrders += remaining;
+    if (remaining > 0) notice('Bought ' + fromStock + ' from stock; ' + remaining + ' in production.');
+    else notice('Bought ' + n + ' routers (instant).');
+    // Auto-onboard if any LCO has spare potential
+    for (const lco of state.lcos) autoOnboardLco(lco);
+    render();
+  }
+  document.getElementById('btn-order-1').onclick = () => orderRouters(1, HS_PRICE);
+  document.getElementById('btn-order-5').onclick = () => orderRouters(5, HS_BULK5_PRICE);
+  document.getElementById('btn-order-25').onclick = () => orderRouters(25, HS_BULK25_PRICE);
+
+  document.getElementById('btn-upgrade-mfg').onclick = () => {
+    const c = mfgCostAt(state.manufacturer.level);
+    if (state.funds >= c) {
+      state.funds -= c;
+      state.manufacturer.level++;
+      notice('Production line upgraded to Lv ' + state.manufacturer.level);
+      render();
+    }
+  };
+
+  document.getElementById('btn-refresh-lco-offers').onclick = () => {
+    if (state.funds < 10) return;
+    state.funds -= 10;
+    state.lcoMarket.offers = [makeOffer(), makeOffer(), makeOffer()];
+    render();
+  };
+  document.getElementById('btn-refresh-bw-offers').onclick = () => {
+    if (state.funds < 10) return;
+    state.funds -= 10;
+    state.bwMarket.offers = [makeBwOffer(), makeBwOffer()];
+    render();
+  };
+
+  document.getElementById('sell-data').onclick = () => {
+    if (state.inventory < 1000) return;
+    state.inventory -= 1000;
+    state.funds += 1000 * clickCost() * 0.5;
+    render();
+  };
+  document.getElementById('sell-hotspot').onclick = () => {
+    if (state.routersInStock < 5) return;
+    state.routersInStock -= 5;
+    state.funds += 5 * HS_PRICE * 0.5;
+    render();
+  };
+  document.getElementById('auto-sell-toggle').onchange = e => state.market.autoSell = e.target.checked;
+  document.getElementById('auto-sell-threshold').onchange = e => state.market.autoSellThreshold = Math.max(1000, parseInt(e.target.value)||50000);
+
+  document.getElementById('btn-prestige').onclick = () => {
+    const earn = Math.floor(Math.sqrt(state.totalLifetimeCustomers/100));
+    if (!confirm('Prestige? Mint ' + earn + ' TT and restart.')) return;
+    const carry = { tt: state.tt + earn, ttSpent: state.ttSpent, companyName: state.companyName };
+    initState(carry);
+    ['mfg-section','lcos-section','bw-section','lco-market-section','bw-market-section','open-marketplace-section','prestige-panel']
+      .forEach(id => document.getElementById(id).classList.add('hidden'));
+    notice('Prestiged. Tokens minted: ' + earn);
+    render();
+  };
+}
+
+// =================================================================
+// BOOT
+// =================================================================
+wireFixedHandlers();
+setTimeout(() => { try { document.getElementById('company-input').focus(); } catch(e){} }, 50);
+</script>
+</body>
+</html>
